@@ -1,5 +1,11 @@
 import heapq
 from datetime import datetime
+from collections import Counter
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import re
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 # Example data
 posts = {
@@ -39,6 +45,26 @@ def filter_posts(posts, keyword=None, min_age=None, max_age=None, gender=None):
         filtered_posts[post_id] = post
     return filtered_posts
 
+# Function to generate word cloud from filtered posts
+def generate_wordcloud_from_posts(posts):
+    stop_words = set(stopwords.words('english'))
+    ps = PorterStemmer()
+    word_freq = Counter()
+
+    # Process content from posts
+    for post in posts.values():
+        words = re.findall(r'\b\w+\b', post['content'].lower())
+        words = [ps.stem(w) for w in words if w not in stop_words]
+        word_freq.update(words)
+    
+    # Generate and display the word cloud
+    wc = WordCloud(width=800, height=400, background_color='white')
+    wc.generate_from_frequencies(word_freq)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis('off')
+    plt.show()
+    
 #Example Filter: Filter for posts that mention "cats" and are from users aged 20-30 who are female
 filtered_posts = filter_posts(posts, keyword="cats", min_age=20, max_age=30, gender="female")
 
@@ -57,3 +83,7 @@ print("Trending Posts:")
 for score, post_id in top_posts:
     post = filtered_posts[post_id]
     print(f"Post ID: {post_id}, Score: {(-score):.1f}, Views: {post['views']}, Comments: {post['comments']}, Likes: {post['likes']}, Content: \"{post['content']}\"")
+
+# Generate Word Cloud for filtered posts
+print("\nWord Cloud:")
+generate_wordcloud_from_posts(filtered_posts)
